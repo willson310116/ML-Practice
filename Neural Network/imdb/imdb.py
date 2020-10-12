@@ -33,66 +33,55 @@ def decode_review(text):
 # print(decode_review(test_data[0]))
 # print(len(test_data[0]), len(test_data[1]))
 
-vocab_size = 88000  # should set properly
-# create model
-model = keras.Sequential()
-model.add(keras.layers.Embedding(vocab_size, 16))  # create 100000 word vectors with 16 dimensions for each word pass in
-model.add(keras.layers.GlobalAveragePooling1D())  # scale down the dimensions
-model.add(keras.layers.Dense(16, activation="relu"))
-model.add(keras.layers.Dense(1, activation="sigmoid"))  # the output is 0 or 1 and based on probability
 
-model.summary()
+# # create model
+# vocab_size = 88000  # should set properly
+# model = keras.Sequential()
+# model.add(keras.layers.Embedding(vocab_size, 16))  # create 100000 word vectors with 16 dimensions for each word pass in
+# model.add(keras.layers.GlobalAveragePooling1D())  # scale down the dimensions
+# model.add(keras.layers.Dense(16, activation="relu"))
+# model.add(keras.layers.Dense(1, activation="sigmoid"))  # the output is 0 or 1 and based on probability
 
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
-# validation data
-x_val = train_data[:10000]  # take parts of training data as validation data
-x_train = train_data[10000:]
+# model.summary()
 
-y_val = train_labels[:10000]
-y_train = train_labels[10000:]
+# model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+# # validation data
+# x_val = train_data[:10000]  # take parts of training data as validation data
+# x_train = train_data[10000:]
 
-fitModel = model.fit(x_train, y_train, epochs=40, batch_size=512, validation_data=(x_val, y_val), verbose=1)
+# y_val = train_labels[:10000]
+# y_train = train_labels[10000:]
 
-results = model.evaluate(test_data, test_labels)
+# fitModel = model.fit(x_train, y_train, epochs=40, batch_size=512, validation_data=(x_val, y_val), verbose=1)
 
-print(results)  # gives [loss, accuracy]
+# results = model.evaluate(test_data, test_labels)
 
-# h5 stands for the extension for saving models of tensorflow or keras in binary data
-model.save("model.h5")
+# print(results)  # gives [loss, accuracy]
 
+# # h5 stands for the extension for saving models of tensorflow or keras in binary data
+# model.save("model.h5")
+
+
+def review_encode(s):
+    encoded = [1]
+    for word in s:
+        if word.lower() in word_index:  # word_index gives numbers
+            encoded.append(word_index[word.lower()])
+        else:
+            encoded.append(2)  # 2 stands for UNK
+    return encoded
 
 # def review_encode(s):
 #     encoded = [1]
 #     for word in s:
-#         if word.lower() in word_index:  # word_index gives numbers
+#         if word.lower() in word_index:
 #             encoded.append(word_index[word.lower()])
 #         else:
-#             encoded.append(2)  # 2 stands for UNK
+#             encoded.append(2)
 #     return encoded
-def review_encode(s):
-    encoded = [1]
-    for word in s:
-        if word.lower() in word_index:
-            encoded.append(word_index[word.lower()])
-        else:
-            encoded.append(2)
-    return encoded
 
 
 model = keras.models.load_model("model.h5")
-
-# with open("test.txt", encoding="utf-8") as f:
-#     for line in f.readlines():
-#         nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"",
-#                                                                                                                   "").strip().split(
-#             " ")
-#         encode = review_encode(nline)
-#         encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
-#                                                             maxlen=13000)
-#         predict = model.predict(encode)
-#         print(line)
-#         print(encode)
-#         print(predict[0])
 
 with open("test.txt", encoding="utf-8") as f:
     for line in f.readlines():
@@ -101,11 +90,24 @@ with open("test.txt", encoding="utf-8") as f:
             " ")
         encode = review_encode(nline)
         encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
-                                                            maxlen=250)  # make the data 250 words long
+                                                            maxlen=250)
         predict = model.predict(encode)
         print(line)
         print(encode)
-        print(predict[0])  # give a result of the text is a positive sentiment
+        print(predict[0])
+
+# with open("test.txt", encoding="utf-8") as f:
+#     for line in f.readlines():
+#         nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"",
+#                                                                                                                   "").strip().split(
+#             " ")
+#         encode = review_encode(nline)
+#         encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
+#                                                             maxlen=250)  # make the data 250 words long
+#         predict = model.predict(encode)
+#         print(line)
+#         print(encode)
+#         print(predict[0])  # give a result of the text is a positive sentiment
 
 # Example of the input review and the prediction result
 '''
