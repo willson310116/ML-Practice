@@ -94,6 +94,21 @@ def decode_review(text):
 # # model.save("model.h5")
 
 
+def clean_string(s):
+    """
+    Modifying multiple lines string into one string with a proper form
+    """
+    result = list(s.strip())
+    # print(result,"\n")
+    for i in range(len(result)):
+        if result[i] == '\n':
+            result[i] = " "
+    result = "".join(result)
+    result = result.replace(".", "").replace(",", "").replace("(", "").replace(")", "").replace(":", "").replace("\n", "").replace("\"", "").replace("<", "").replace(">", "").split(" ")
+    result = list(filter(("").__ne__, result))
+    return result
+
+
 def review_encode(s):
     encoded = [1]
     for word in s:
@@ -103,37 +118,62 @@ def review_encode(s):
             encoded.append(2)  # 2 stands for UNK
     return encoded
 
-
+# use a trained model from the same file
 model = keras.models.load_model("model.h5")
 
 
 with open("test.txt", encoding="utf-8") as f:
-    for line in f.readlines():
-        nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"",
-                                                                                                                  "").strip().split(
-            " ")
-        encode = review_encode(nline)
-        encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
-                                                            maxlen=850)  # make the data 250 words long
-        predict = model.predict(encode)
-        # print(line)
-        # print(encode)
-        print(predict[0])  # give a result of the text is a positive sentiment
+    nline = f.read()
+    print(nline)
+    nline_clean = clean_string(nline)
+    print("\n")
+    print(nline_clean)
+    encode = review_encode(nline_clean)
+    encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",maxlen=850)
+    predict = model.predict(encode)
+    print(predict[0])
+
+    # for line in f.readlines():
+    #     nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\n", "").replace("\"",
+    #                                                                                                               "").strip().split(
+    #         " ")
+    #     nline = list(filter(("").__ne__, nline))
+    #     encode = review_encode(nline)
+    #     encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
+    #                                                         maxlen=850)  # make the data 250 words long
+    #     predict = model.predict(encode)
+    #     # print(line)
+    #     # print(encode)
+    #     print(predict[0])  # give a result of the text is a positive sentiment
 
 print("------------------------------------------")
 
-with open("try.txt", encoding="utf-8") as f:
-    for line in f.readlines():
-        nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"",
-                                                                                                                  "").strip().split(
-            " ")
-        encode = review_encode(nline)
-        encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
-                                                            maxlen=850)
-        predict = model.predict(encode)
-        # print(line)
-        # print(encode)
-        print(predict[0])
+filename = "load.txt"
+
+with open(filename, encoding="utf-8") as f:
+    nline = f.read()
+    print(nline)
+    nline_clean = clean_string(nline)
+    print("\n")
+    print(nline_clean)
+    encode = review_encode(nline_clean)
+    encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",maxlen=850)
+    predict = model.predict(encode)
+    print(predict[0])
+
+    # for line in f.readlines():
+    #     nline = line.replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\n", "").replace("\"",
+    #                                                                                                               "").strip().split(
+    #         " ")
+    #     nline = list(filter(("").__ne__, nline))
+    #     encode = review_encode(nline)
+    #     encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
+    #                                                         maxlen=850)
+    #     predict = model.predict(encode)
+    #     # print(line)
+    #     # print(encode)
+    #     print(predict[0])
+
 
 # Example of the input review and the prediction result
 '''
@@ -145,6 +185,10 @@ print(f"Prediction: {str(predict[0])}")
 print(f"Actual: {str(test_labels[0])}")
 print(results)
 '''
+
+
+
+
 
 data_out = pd.read_csv("IMDB Dataset.csv")
 data_out["sentiment"].replace({"positive": 1, "negative": 0}, inplace=True)
@@ -165,19 +209,20 @@ y = data_test["sentiment"]
 count = 0
 wrong_prediction = []
 for i in range(len(data_test)):
-    data_preprocess = x[i].replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"", "").replace("<", "").replace(">", "").replace("/", "").strip().split(" ")
+    data_preprocess = clean_string(x[i])
+    # data_preprocess = x[i].replace(",", "").replace(".", "").replace("(", "").replace(")", "").replace(":", "").replace("\"", "").replace("<", "").replace(">", "").replace("/", "").replace("\n", "").strip().split(" ")
+    # data_preprocess = list(filter(("").__ne__, data_preprocess))
     encode = review_encode(data_preprocess)
     encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post", maxlen=850)
     predict = model.predict(encode)
-    # print(line)
-    # print(encode)
+    
+    # f"{str:<(num)}" allows alignment
     if round(float(predict[0])) == y[i]:
         count += 1
-        print(f"{i} data\tPredict: {predict[0]}\t Actual: {y[i]}")
+        print(f"{i} data\t  Predict: {str(predict[0]):<15}\t Actual: {y[i]}")
     else:
         wrong_prediction.append(i)
-        print(f"{i} data\tPredict: {predict[0]}\t Actual: {y[i]}, wrong answer")
-
+        print(f"{i} data\t  Predict: {str(predict[0]):<15}\t Actual: {y[i]}\twrong answer")
     
 print(f"The accuracy of the external data is {count/len(data_test)}")
 print(wrong_prediction)
