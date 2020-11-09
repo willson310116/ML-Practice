@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import pandas as pd
+import sys
 
 # IMDB movie review sentiment classification, labels (1,0) giving the review sentiment (positive/negative)
 data = keras.datasets.imdb
@@ -193,7 +194,8 @@ print(results)
 data_out = pd.read_csv("IMDB Dataset.csv")
 data_out["sentiment"].replace({"positive": 1, "negative": 0}, inplace=True)
 
-num = int(input("How many data do you want to test on this model\n> "))
+# num = int(input("How many data do you want to test on this model\n> "))
+num = int(sys.argv[1])  # no need to input after the program runs
 data_test = data_out[:num]
 # print(data_test.head())
 # print(len(data_test))
